@@ -1,7 +1,10 @@
 
 
 
-
+### v1.0.1
+ * 4 kaggle submissions of linear models
+ * Integration of all features
+ * Completed construction of linear model pipeline
 
 
 ### v0.0.2
