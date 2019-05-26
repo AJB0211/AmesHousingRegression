@@ -11,3 +11,7 @@ AJB0211*
 submissions/
 
 .ipynb_checkpoints/
+
+scored_model/
+
+.vscode/

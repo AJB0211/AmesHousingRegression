@@ -1,6 +1,10 @@
 
 
 
+### v2.0.1
+ * More linear models.
+ * Began lightGBM model training
+
 ### v1.0.1
  * 4 kaggle submissions of linear models
  * Integration of all features
