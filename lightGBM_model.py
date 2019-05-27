@@ -1,5 +1,5 @@
-from statsmodels.api import OLS
-import statsmodels.api as sm
+# from statsmodels.api import OLS
+# import statsmodels.api as sm
 import numpy as np
 import pandas as pd
 
@@ -14,14 +14,18 @@ from sklearn.metrics import mean_squared_error as mse
 
 import lightgbm as lgb
 
+from pathlib import Path
 import re
 
 # Disable warnings
 pd.set_option('mode.chained_assignment', None)
 
+dataDir = Path("./data")
+#trainData = pd.read_csv("./data/train.csv")
+#testData = pd.read_csv("./data/test.csv")
 
-trainData = pd.read_csv("./data/train.csv")
-testData = pd.read_csv("./data/test.csv")
+trainData = pd.read_csv(Path("./data/train.csv"))
+testData = pd.read_csv(Path("./data/test.csv"))
 
 trainData.columns[trainData.columns.str.contains("SF")]
 
@@ -52,7 +56,7 @@ def imputeVals(in_df):
     df.Utilities = df.Utilities.fillna(df.Neighborhood.map(utilities))
     df["CentralAir"] = (df["CentralAir"] == "Y")
     df.MSSubClass[df.MSSubClass == 150] = 120
-    #df["sinMonth"] = df.MoSold.apply(lambda x: np.sin(np.pi*x/12))
+    df["sinMonth"] = df.MoSold.apply(lambda x: np.sin(np.pi*x/12))
     #df["scaledOverallQual"] = df.OverallQual.apply(lambda x: x**qualPow)
     df.Condition1[df.Condition1 == "RRNe"] = "RRNn"
     df.OverallCond[df.OverallCond < 3] = 3
@@ -72,57 +76,59 @@ def imputeVals(in_df):
         df[i] = df[i].apply(lambda x: intDict.get(x, 0))
 
     df["SF"] = df.TotalBsmtSF + df["1stFlrSF"] + df["2ndFlrSF"]
+    df["numBaths"] = df.BsmtFullBath + 0.5*df.BsmtHalfBath + df.FullBath + 0.5*df.HalfBath
+    df["2story"] = (df["2ndFlrSF"] != 0)
+    df["hasBsmt"] = (df["TotalBsmtSF"] != 0)
 
     return df
 
 ####################################################################################################
 ############### THIS IS WHERE YOU SELECT WHICH FEATURES ARE INCLUDED IN THE MODEL ##################
-selected = ["sinMonth", ]
+selected = ["sinMonth" ]
+BsmtDropped = ["BsmtFinSF1", "BsmtUnfSF", "BsmtFinSF2"]
 # values that null is filled with "None" then get one-hot encoded
 fillNone = ["MasVnrType", "BsmtExposure", "BsmtFinType1", "BsmtFinType2", "GarageType", "GarageFinish",
             "Fence", "MiscFeature", "MasVnrType", "LotShape", "LandSlope", "Neighborhood",
             "Condition1", "LotConfig", "BldgType", "HouseStyle", "RoofStyle", "RoofMatl",
-            "Foundation", "Heating", "SaleCondition", "Electrical", "PavedDrive"]
+            "Foundation", "Heating", "SaleCondition", "Electrical", "PavedDrive", "Alley",
+            "Utilities", "Condition2"]
 
 # Categorical variables represented as integers
 cat_to_int = ['ExterQual', 'ExterCond', 'BsmtQual', 'BsmtCond', 'HeatingQC',
               'KitchenQual', 'FireplaceQu', 'GarageQual', 'GarageCond', 'PoolQC']
 
 # ordinal categorical variables
-fillZeroCat = ["BsmtFullBath", "HalfBath",
-               "MSSubClass", "MoSold", "BsmtHalfBath"]
+fillZeroCat = ["MSSubClass"]
 
  
 # continuous variables with missing values that are zero
 diffVars = ["garageDiff", "remodDiff"]
-fillZeroCont = ["MasVnrArea", "GarageArea", "GrLivArea", "1stFlrSF", "2ndFlrSF", "LotFrontage",
-                "TotalBsmtSF", "WoodDeckSF", "OpenPorchSF", "PoolArea", "BedroomAbvGr", "YrSold",
-                "LotArea", "EnclosedPorch", "OverallCond", "OverallQual", "MiscVal", "LowQualFinSF",
-                "LotFrontage", "FullBath", "Fireplaces", "TotRmsAbvGrd", "TotalBsmtSF", ]  # + diffVars
-
-
+rmVars1 = ["MiscVal", "LowQualFinSF","BsmtFullBath", "HalfBath","BsmtHalfBath"]
+fillZeroCont = ["MasVnrArea", "GarageArea", "GrLivArea", "1stFlrSF", "2ndFlrSF", "LotFrontage", 
+                "TotalBsmtSF", "WoodDeckSF", "OpenPorchSF", "PoolArea", "BedroomAbvGr", "YrSold", "MoSold", 
+                "LotArea", "EnclosedPorch", "OverallCond", "OverallQual", 
+                "LotFrontage", "FullBath", "Fireplaces", "TotRmsAbvGrd", "TotalBsmtSF", "numBaths", "Fireplaces", "TotRmsAbvGrd"]   + rmVars1 
 
 # variables that need differences between reference engineered
 imputeDiff = [("GarageYrBlt", "YearBuilt"), ("YearRemodAdd", "YearBuilt")]
 
 # imputed to boolean: passthrough
-imputeBool = ["CentralAir", "HasPool"]
+imputeBool = ["CentralAir", "HasPool", "2story", "hasBsmt"]
 
 # categories that we need to know if they were imputed
 imputeUnknown = []
 
 # List of values taken out to be onehotencoded with a list argument
 # Due to missing values in test data
-handleMissingInt = ["FullBath", "GarageCars", "Fireplaces", "TotRmsAbvGrd"]
+handleMissingInt = ["GarageCars" ]
 handleMissingCat = []
 
 # to be dropped
-dropList0 = ["Id", "GarageCars", "Street", "Alley",
-            "Utilities", "Condition2", "3SsnPorch", "ScreenPorch"]
+dropList0 = ["Id", "GarageCars", "Street",  "3SsnPorch", "ScreenPorch"] + BsmtDropped
 
 imputed_on = ["GarageYrBlt", "YearRemodAdd", "OverallQual"]
 
-BsmtDropped = ["BsmtFinSF1", "BsmtUnfSF", "BsmtFinSF2"]
+
 
 
 #######################
@@ -132,7 +138,6 @@ fillZeroCont = fillZeroCont + BsmtDropped + imputed_on
 
 imputeDict = {"Electrical": "SBrkr",
               "Functional": "Typ",
-              "SaleType": "Oth",
               "Exterior1st": "VinylSd",
               "Exterior2nd": "VinylSd",
               "SaleType": "WD",
@@ -161,7 +166,7 @@ def make_pipeX():
     zeroPipeline = make_pipeline(SimpleImputer(
         strategy="constant", fill_value=0), OneHotEncoder(drop="first", categories="auto"))
     scalePipeline = make_pipeline(SimpleImputer(
-        strategy="constant", fill_value=0), StandardScaler())
+        strategy="constant", fill_value=0))#, StandardScaler())
 
     regressionPipeline = ColumnTransformer([
         ("setNone", nonePipeline, fillNone),
@@ -171,7 +176,7 @@ def make_pipeX():
                                         OneHotEncoder(drop="first")), list(imputeDict.keys())),
         ("bool", "passthrough", imputeBool),
         ("categoricalInts", "passthrough", cat_to_int),
-        #("selected","passthrough",selected),
+        # ("selected","passthrough",selected),
         ("dropped", "drop", dropList)
     ], remainder="drop")
     return regressionPipeline
@@ -187,18 +192,74 @@ test_X = pipeline_X.transform(imputeVals(testData))
 
 
 search_params = {
-    "num_iterations": [50,100,250],
-    "max_depth": [-1,],
-    "learning_rate": np.linspace(0.05,0.4,30),
-    "num_leaves": [20,30,50,80,100,120],
-    "min_child_samples": [5,10,20,30],
-    "min_child_weight": [1e-3,1e-2],
+    "num_boost_round": [50,100,250],
+    "max_depth": [1000],
+    "learning_rate": np.linspace(0.01,0.2,3),
+    "num_leaves": [5,25,50],
+    "min_child_samples": [5,10,20],
+    "min_child_weight": [1e-3],
     "subsample": [0.5,0.7,1.0],  # subsample = bagging
-    "subsample_freq": [5,10],
+    "subsample_freq": [5],
     "colsample_bytree": [0.7,0.85,1.0],  #feature fraction: "mtry"
     #"max_delta_step": -1,
-    "reg_alpha": np.logspace(-3,1,10),      # L1
-    "reg_lambda": np.logspace(-3,1,10)#,   # L2 
+    "reg_alpha": np.logspace(-3,1,5),      # L1
+    "reg_lambda": np.logspace(-3,1,5)#,   # L2 
+    # "min_split_gain": 0.0,
+    # "drop_rate": 0.1, # dart only
+    # "max_drop": 50, # dart only
+    # "skip_drop": 0.5, # dart only
+    # "uniform_drop": False, # dart only
+    # "top_rate": 0.2, # goss only
+    # "other_rate": 0.1, # goss only
+    # "min_data_per_group": 100,
+    # "max_cat_threshold": 32,
+    # "cat_l2": 10.0,
+    # "cat_smooth": 10.0,
+    # "max_cat_to_onehot": 4,
+    # "topk": 20, # larger -> more accurate but slow
+}
+
+search_params = {
+    "num_boost_round": [50,100,250],
+    "max_depth": [500,750,1000],
+    "learning_rate": [0.05,0.1],
+    "num_leaves": [5],
+    "min_child_samples": [10],
+    "min_child_weight": [1e-3],
+    "subsample": [0.7],  # subsample = bagging
+    "subsample_freq": [5],
+    "colsample_bytree": [0.7,0.85,1.0],  #feature fraction: "mtry"
+    #"max_delta_step": -1,
+    "reg_alpha": [0.05,0.1],      # L1
+    "reg_lambda": [2,6,10]#,   # L2 
+    # "min_split_gain": 0.0,
+    # "drop_rate": 0.1, # dart only
+    # "max_drop": 50, # dart only
+    # "skip_drop": 0.5, # dart only
+    # "uniform_drop": False, # dart only
+    # "top_rate": 0.2, # goss only
+    # "other_rate": 0.1, # goss only
+    # "min_data_per_group": 100,
+    # "max_cat_threshold": 32,
+    # "cat_l2": 10.0,
+    # "cat_smooth": 10.0,
+    # "max_cat_to_onehot": 4,
+    # "topk": 20, # larger -> more accurate but slow
+}
+
+search_params = {
+    "num_boost_round": [250,500],
+    "max_depth": [250,500,750],
+    "learning_rate": [0.05,0.1],
+    "num_leaves": [5],
+    "min_child_samples": [10],
+    "min_child_weight": [1e-3],
+    "subsample": [0.7],  # subsample = bagging
+    "subsample_freq": [5],
+    "colsample_bytree": [0.5,0.7],  #feature fraction: "mtry"
+    #"max_delta_step": -1,
+    "reg_alpha": [0.05],      # L1
+    "reg_lambda": [2]#,   # L2 
     # "min_split_gain": 0.0,
     # "drop_rate": 0.1, # dart only
     # "max_drop": 50, # dart only
@@ -216,17 +277,33 @@ search_params = {
 
 # verbosity 0 warnings
 #          <0 fatal
-lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="dart", verbosity=-1)
+# lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="gbdt", device_type = "cpu", tree_learner = "feature", verbosity=1)
 
-lgb_CV = GridSearchCV(lgbm,search_params,cv=3)
-lgb_CV.fit(train_X, train_y)
+# lgb_CV = GridSearchCV(lgbm,search_params,cv=3)
+# lgb_CV.fit(train_X, train_y)
+# print(lgb_CV.best_params_)
+# print(lgb_CV.best_score_)
 
-#lgbm.save_model("lgb_model.txt")
+# fit_params = lgb_CV.best_params_
+# fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.2, 'max_depth': 1000, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.01, 'reg_lambda': 1.0, 'subsample': 0.5, 'subsample_freq': 5}   
+#       
+# fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 1000, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.05, 'reg_lambda': 2, 'subsample': 0.7, 'subsample_freq': 5}  
+# Mean squared error: 0.07779883510072638 
+# fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 500, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.05, 'reg_lambda': 2, 'subsample': 0.7, 'subsample_freq': 5} 
+# Mean squared error: 0.07779883510072638 
+# fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.05, 'max_depth': 250, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 500, 'num_leaves': 5, 'reg_alpha': 0.05, 'reg_lambda': 2, 'subsample': 0.7, 'subsample_freq': 5} 
+# Mean squared error: 0.0747398772357607
 
-print(lgbm.best_params_)
-print(lgbm.best_score_)
+fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 1000, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.05, 'reg_lambda': 5, 'subsample': 0.7, 'subsample_freq': 5}  
+# Mean squared error: 0.08018601380284113  
+# fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 1000, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.1, 'reg_lambda': 7.5, 'subsample': 0.7, 'subsample_freq': 5}  
 
-train_preds = lgbm.predict(train_X)
+lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="dart", device_type = "cpu", tree_learner = "feature", verbosity=1, **fit_params)
+lgbm.set_params(**fit_params)
+lgbm.fit(train_X,train_y)
+
+
+train_preds = lgbm.predict(train_X).reshape(-1,)
 lgbm_preds = lgbm.predict(test_X)
 preds = np.exp(pipeline_y.inverse_transform(lgbm_preds))
 
@@ -240,3 +317,7 @@ submit_frame['Id'] = testData.Id
 submit_frame['SalePrice'] = preds
 submit_frame.to_csv('submission.csv', index=False)
 
+pred_frame = pd.DataFrame()
+pred_frame['Id'] = trainData.Id
+pred_frame['SalePrice'] = np.exp(pipeline_y.inverse_transform(lgbm.predict(train_X)))
+pred_frame.to_csv("train_preds.csv",index=False)

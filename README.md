@@ -1,6 +1,9 @@
 
 
 
+### v2.1.1
+ * Finished light gbm model. merge from work on desktop
+
 ### v2.0.1
  * More linear models.
  * Began lightGBM model training
