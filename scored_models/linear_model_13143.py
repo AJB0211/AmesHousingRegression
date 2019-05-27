@@ -267,7 +267,7 @@ submit_frame.to_csv('submission.csv', index=False)
 train_pred_frame = pd.DataFrame()
 train_pred_frame["Id"] = trainData.Id
 train_pred_frame["SalePrice"] = lm.predict(trainData)
-train_pred_frame.to_csv("train_preds.csv", index = False)
+train_pred_frame.to_csv("train_preds.csv")
 
 # {'alpha': 0.0005623413251903491, 'l1_ratio': 1.0}
 

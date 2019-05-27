@@ -187,10 +187,10 @@ test_X = pipeline_X.transform(imputeVals(testData))
 
 
 search_params = {
-    "num_iterations": [50,100,250],
-    "max_depth": [-1,],
-    "learning_rate": np.linspace(0.05,0.4,30),
-    "num_leaves": [20,30,50,80,100,120],
+    "num_iteration": [50,100],
+    #"max_depth": [-1,],
+    "learning_rate": np.linspace(0.05,0.4,5),
+    "num_leaves": [20,60,90,120],
     "min_child_samples": [5,10,20,30],
     "min_child_weight": [1e-3,1e-2],
     "subsample": [0.5,0.7,1.0],  # subsample = bagging
@@ -216,7 +216,7 @@ search_params = {
 
 # verbosity 0 warnings
 #          <0 fatal
-lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="dart", verbosity=-1)
+lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="gbdt", verbosity=1)
 
 lgb_CV = GridSearchCV(lgbm,search_params,cv=3)
 lgb_CV.fit(train_X, train_y)
