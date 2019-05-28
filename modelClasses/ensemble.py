@@ -19,6 +19,8 @@ from ridge_pipeline import RidgeReg
 from gbr_pipeline import GradBoostReg
 from svr_pipeline import svReg
 from metaModel import MetaModel_Lasso
+from metaModel_huber import MetaModel_Huber
+from metaModel_linear import MetaModel_lm
 
 
 imputeDict = workup.getImputeDicts(trainData)
@@ -37,31 +39,44 @@ params_svr = {}
 paramList = [params_ElasticNet,
             params_lgb,
             params_ridge,
-            params_gbr#, params_svr
+            params_gbr, 
+            params_svr
             ]
 
 
 lm = ElasticReg(trainData,qualPow=qualPow,**imputeDict)
-lgb = lgbmReg(trainData,**imputeDict)
+lgb = lgbmReg(trainData,qualPow=qualPow,**imputeDict)
 ridge = RidgeReg(trainData,qualPow=qualPow,**imputeDict)
 gbr = GradBoostReg(trainData, qualPow=qualPow, **imputeDict)
 svr = svReg(trainData,qualPow=qualPow, **imputeDict)
 
-models = [lm,lgb,ridge,gbr]#,svr]
+models = [lm,lgb,ridge,gbr,svr]
 
 # maybe make n_folds tunable????
-meta = MetaModel_Lasso(trainData,models, n_folds = 5, qualPow=qualPow, imputeDict=imputeDict)
+# meta = MetaModel_lm(trainData,models,paramList, n_folds = 25, qualPow=qualPow, imputeDict=imputeDict)
+# meta.fitModel({})
+# print(f'Train R^2: {meta.getTrainRsquared()}')
+
+
+meta = MetaModel_Lasso(trainData, models, paramList, n_folds=10, qualPow=qualPow, imputeDict=imputeDict)
+for i in np.logspace(-5,2,20):
+    meta_params = {
+        "alpha": i,
+        "max_iter": 1e6
+    }
+    meta.fitModel(meta_params)
+    print(f'{i}:  {meta.getTrainRsquared()}')
+
+print("\n\n\n")
+meta.fitModel({})
+print(f'Train R^2: {meta.getTrainRsquared()}')
 
 
 
 
+preds = meta.predict(testData)
 
-lm.fitModel(params_ElasticNet)
-print(f'LM R-squared: {lm.getTrainRsquared()}')
-print(f'LM RMSLE:     {lm.getRMSLE()}')
-
-
-lgb.fitModel(params_lgb)
-
-
-print(f'LGBM RMSLE: {lgb.getRMSLE()}')
+submit_frame = pd.DataFrame()
+submit_frame['Id'] = testData.Id
+submit_frame['SalePrice'] = preds
+submit_frame.to_csv('submission_ensemble_lm3.csv', index=False)

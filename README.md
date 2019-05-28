@@ -1,6 +1,13 @@
 
 
 
+### v3.1.1
+ * Restructured folders
+ * Universal feature engineering file
+ * SVR class and parameter search
+ * Added example file showing how to do parameter search with an ElasticNet model
+ 
+
 ### v3.0.1
  * Add ensemble model
  * Base model class for ensembled models
@@ -9,6 +16,7 @@
     + LightGBM
     + Ridge
     + GradientBoostingRegressor
+ * Used RobustScaler and PowerTransformer for improvements in evaluation
  * Add external workup scripts for each model
 
 ### v2.2.1

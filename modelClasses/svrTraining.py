@@ -32,10 +32,18 @@ qualPow = workup.getQualScale(trainData)
 
 svr = svReg(trainData,qualPow=qualPow,**imputeDict)
 
+# search = {
+#     "kernel": ["linear","poly","rbf"],
+#     "gamma": ["auto"],
+#     "C": np.linspace(0.2,50,10),
+#     "epsilon": np.linspace(0.001,1.5,20)
+#     }
+
 search = {
-    "kernel": ["linear","poly","rbf"],
+    "kernel": ["rbf"],
     "gamma": ["auto"],
-    ###################
+    "C": np.linspace(1,15,20),
+    "epsilon": np.logspace(-5,-2,5)
     }
 
 svr.gridSearch(search)
@@ -59,3 +67,7 @@ submit_frame['SalePrice'] = preds
 submit_frame.to_csv('submission_svr1.csv', index=False)
 
 
+#
+# {'C': 5.733333333333333, 'epsilon': 0.001, 'gamma': 'auto', 'kernel': 'rbf'}
+# {'C': 4.684210526315789, 'epsilon': 0.01, 'gamma': 'auto', 'kernel': 'rbf'}
+# 

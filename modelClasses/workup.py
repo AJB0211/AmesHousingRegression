@@ -5,19 +5,19 @@ import statsmodels.api as sm
 
 
 
-## Mode imputation dictionaries for each neighborhood
+
 def getImputeDicts(trainData):
     zoning = trainData.groupby("Neighborhood").MSZoning.apply(
-        lambda x: x.mode()[0])
+        lambda x: x.value_counts().sort_values().index[0]).to_dict()
     utilities = trainData.groupby("Neighborhood").Utilities.apply(
-        lambda x: x.mode()[0])
+        lambda x: x.value_counts().sort_values().index[0]).to_dict()
     frontage = trainData.groupby("Neighborhood").LotFrontage.apply(
-        lambda x: x.mode()[0])
+        lambda x: x.value_counts().sort_values().index[0]).to_dict()
 
     return {"zoning": zoning, "utilities": utilities, "frontage": frontage}
 
-
 ## Linearize the OverallQual variable
+
 def getQualScale(trainData):
     def testPow(n):
         raw_X = trainData.OverallQual.values.reshape(-1, 1)

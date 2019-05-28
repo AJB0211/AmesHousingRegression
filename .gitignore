@@ -1,10 +1,10 @@
-data/
+data/*
 
-oldModelTraining.ipynb
+jupyterNotebooks/oldModelTraining.ipynb
 
 Untitled*
 
-AJB0211*
+jupyterrNotebooks/AJB0211*
 
 .Rhistory
 
@@ -12,6 +12,10 @@ submissions/
 
 .ipynb_checkpoints/
 
-scored_model/
+scored_models/
 
 .vscode/
+
+__pycache__/
+
+*.csv

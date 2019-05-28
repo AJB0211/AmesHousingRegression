@@ -30,7 +30,9 @@ class svReg(customRegressor):
         self.y = np.log(tempDF.SalePrice.values.reshape(-1, 1))
 
         self.pipeline_X = self._make_pipe()
+        self.pipeline_X.fit(self.X)
         self.pipeline_y = StandardScaler()
+        self.pipeline_y.fit(self.y)
 
     def _rmOutliers(self, x, y):
         outliers = ((y > 4000) & (y < 5E5))
@@ -63,8 +65,8 @@ class svReg(customRegressor):
         self._searchSpace = params
 
         piped_X = self._rmOutliers(self.X, self.y)
-        piped_X = self.pipeline_X.fit_transform(piped_X)
-        piped_y = self.pipeline_y.fit_transform(self.y)
+        piped_X = self.pipeline_X.transform(piped_X)
+        piped_y = self.pipeline_y.transform(self.y)
 
         self._gridSearchObject = GridSearchCV(
             SVR(), params, cv=cv, scoring="neg_mean_squared_error", n_jobs=njobs, verbose=verbose)
@@ -75,8 +77,8 @@ class svReg(customRegressor):
         self._params = params
 
         piped_X = self._rmOutliers(self.X, self.y)
-        piped_X = self.pipeline_X.fit_transform(piped_X)
-        piped_y = self.pipeline_y.fit_transform(self.y)
+        piped_X = self.pipeline_X.transform(piped_X)
+        piped_y = self.pipeline_y.transform(self.y)
 
         self.model.set_params(**params)
         self.model.fit(piped_X, piped_y)

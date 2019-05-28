@@ -28,7 +28,9 @@ class lgbmReg(customRegressor):
         self.y = np.log(tempDF.SalePrice.values.reshape(-1, 1))
 
         self.pipeline_X = self._make_pipe()
+        self.pipeline_X.fit(self.X)
         self.pipeline_y = StandardScaler()
+        self.pipeline_y.fit(self.y)
 
     def _make_pipe(self):
         import lgbm_features as ft
@@ -59,8 +61,8 @@ class lgbmReg(customRegressor):
         gridRegressor = lgb.LGBMRegressor(
             objective="regression", metric="mse", boosting_type=boosting_type, device_type=device_type, tree_learner="feature", verbosity=verbosity, **params)
 
-        piped_X = self.pipeline_X.fit_transform(self.X)
-        piped_y = self.pipeline_y.fit_transform(self.y)
+        piped_X = self.pipeline_X.transform(self.X)
+        piped_y = self.pipeline_y.transform(self.y)
 
         self._searchSpace = params
         self._gridSearchObject = GridSearchCV(gridRegressor,params,cv=cv)
@@ -72,7 +74,7 @@ class lgbmReg(customRegressor):
         self.model = lgb.LGBMRegressor(objective="regression", metric="mse", boosting_type=boosting_type,
                                  device_type=device_type, tree_learner="feature", verbosity=verbosity, **params)
 
-        piped_X = self.pipeline_X.fit_transform(self.X)
-        piped_y = self.pipeline_y.fit_transform(self.y).reshape(-1,)
+        piped_X = self.pipeline_X.transform(self.X)
+        piped_y = self.pipeline_y.transform(self.y).reshape(-1,)
 
         self.model.fit(piped_X, piped_y)

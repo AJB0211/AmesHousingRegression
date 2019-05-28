@@ -37,8 +37,9 @@ class customRegressor(object):
 
     # for ensembling
     def subset(self,Idx):
-        self.X = self.X[Idx]
-        self.y = self.y[Idx]
+        print(self.__class__)
+        self.X = self.X.reset_index().iloc[Idx,:]
+        self.y = self.y[Idx,:]
 
     ## Transformer class for pipeline, imputing dict values on NAs
     class dictImputer(BaseEstimator, TransformerMixin):
