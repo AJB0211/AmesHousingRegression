@@ -1,10 +1,20 @@
 
 
 
-### v2.1.1
+### v3.0.1
+ * Add ensemble model
+ * Base model class for ensembled models
+ * New model classes for:
+    + ElasticNet
+    + LightGBM
+    + Ridge
+    + GradientBoostingRegressor
+ * Add external workup scripts for each model
+
+### v2.2.1
  * Finished light gbm model. merge from work on desktop
 
-### v2.0.1
+### v2.1.1
  * More linear models.
  * Began lightGBM model training
 

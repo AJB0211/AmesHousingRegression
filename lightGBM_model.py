@@ -20,10 +20,6 @@ import re
 # Disable warnings
 pd.set_option('mode.chained_assignment', None)
 
-dataDir = Path("./data")
-#trainData = pd.read_csv("./data/train.csv")
-#testData = pd.read_csv("./data/test.csv")
-
 trainData = pd.read_csv(Path("./data/train.csv"))
 testData = pd.read_csv(Path("./data/test.csv"))
 
@@ -299,7 +295,6 @@ fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 1000, 
 # fit_params = {'colsample_bytree': 0.7, 'learning_rate': 0.1, 'max_depth': 1000, 'min_child_samples': 10, 'min_child_weight': 0.001, 'num_boost_round': 250, 'num_leaves': 5, 'reg_alpha': 0.1, 'reg_lambda': 7.5, 'subsample': 0.7, 'subsample_freq': 5}  
 
 lgbm = lgb.LGBMRegressor(objective= "regression", metric="mse", boosting_type="dart", device_type = "cpu", tree_learner = "feature", verbosity=1, **fit_params)
-lgbm.set_params(**fit_params)
 lgbm.fit(train_X,train_y)
 
 

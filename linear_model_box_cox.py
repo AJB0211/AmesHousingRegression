@@ -1,15 +1,10 @@
-
-### Note this has been deprecated
-## This is due to the outlier filtering, fixing it is nontrivial
-## Solution is present in ElasticNet_pipeline.py
-
 import numpy as np 
 import pandas as pd
 
 #import sklearn
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PowerTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import ElasticNet
@@ -176,7 +171,8 @@ class linReg:
 
         self._gridSearch = None
         self.pipeline_X = self.__make_pipe()
-        self.pipeline_y = StandardScaler()
+        #self.pipeline_y = StandardScaler()
+        self.pipeline_y = PowerTransformer()
         self._searchSpace = None
         self._params = None
         self.lm = ElasticNet()
@@ -190,7 +186,7 @@ class linReg:
         zeroPipeline = make_pipeline(SimpleImputer(
             strategy="constant", fill_value=0), OneHotEncoder(drop="first", categories="auto"))
         scalePipeline = make_pipeline(SimpleImputer(
-            strategy="constant", fill_value=0), StandardScaler())
+            strategy="constant", fill_value=0), PowerTransformer())
 
         regressionPipeline = ColumnTransformer([
             ("setNone", nonePipeline, fillNone),
@@ -245,12 +241,13 @@ class linReg:
     # Root Mean Square Log Error
     def getRMSLE(self):
         piped_X = self.pipeline_X.transform(self.X)
-        preds = self.pipeline_y.inverse_transform(self.lm.predict(piped_X))
+        preds = self.lm.predict(piped_X).reshape(-1,1)
+        preds = self.pipeline_y.inverse_transform(preds)
         return mean_squared_error(self.y,preds)
 
     def predict(self, test_X):
         piped_X = self.pipeline_X.transform(self.__imputeVals(test_X))
-        preds = self.lm.predict(piped_X)
+        preds = self.lm.predict(piped_X).reshape(-1,1)
         return self.__invert(preds)
 
 
@@ -282,8 +279,6 @@ train_pred_frame = pd.DataFrame()
 train_pred_frame["Id"] = trainData.Id
 train_pred_frame["SalePrice"] = lm.predict(in_trainData)
 train_pred_frame.to_csv("train_preds.csv", index = False)
-
-print(train_pred_frame.shape)
 
 # {'alpha': 0.0005623413251903491, 'l1_ratio': 1.0}
 
