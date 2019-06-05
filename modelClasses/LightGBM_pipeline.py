@@ -59,7 +59,7 @@ class lgbmReg(customRegressor):
 
     def gridSearch(self,params,cv=3,njobs=-1,verbose=50,device_type="cpu",boosting_type="gbdt",verbosity=1):
         gridRegressor = lgb.LGBMRegressor(
-            objective="regression", metric="mse", boosting_type=boosting_type, device_type=device_type, tree_learner="feature", verbosity=verbosity, **params)
+            objective="regression", metric="mse", boosting_type=boosting_type, device_type=device_type, tree_learner="feature", verbosity=verbosity)
 
         piped_X = self.pipeline_X.transform(self.X)
         piped_y = self.pipeline_y.transform(self.y)

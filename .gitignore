@@ -19,3 +19,9 @@ scored_models/
 __pycache__/
 
 *.csv
+
+blogPost/
+
+final_submissions/
+
+param_search/

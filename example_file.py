@@ -25,8 +25,8 @@ imputeDict = workup.getImputeDicts(trainData)
 # This returns the exponent to linearize the OverallQual feature
 qualPow = workup.getQualScale(trainData)
 
-## impute_shell:: (int,dict,dict,dict) => (pd.DataFrame => pd.DataFrame)
-## imputeVals:: pd.DataFrame => pd.DataFrame 
+## impute_shell :: (int,dict,dict,dict) => (pd.DataFrame => pd.DataFrame)
+## imputeVals :: pd.DataFrame => pd.DataFrame 
 ## imputeVals is returned from a curried function impute_shell contained in feature_engineering.py
 imputeVals = feature_engineering.impute_shell(qualPow=qualPow, **imputeDict)
 
@@ -50,26 +50,24 @@ test_X = pipeline_X.transform(imputeVals(testData))
 
 ###################### GRID SEARCH #########################################
 ## Comment out this block if parameters are known
-# search = {
-#     "alpha": np.linspace(0.001, 0.01, 10),
-#     "l1_ratio": np.linspace(0.2, 0.4, 10)
-#     }
+search = {
+    "alpha": np.linspace(0.001, 0.01, 10),
+    "l1_ratio": np.linspace(0.2, 0.4, 10)
+    }
 
-# ## n_jobs sets number of cores to parallelize on, set to 4 if you have 8 cores if you are getting bottlenecked
-# ## verbose defines how much information is printed to console during search
-# model_grid = GridSearchCV(ElasticNet(), search, scoring="neg_mean_squared_error", cv=5,n_jobs=-1, verbose=50)
-# model_grid.fit(train_X,train_y)
+## n_jobs sets number of cores to parallelize on, set to 4 if you have 8 cores if you are getting bottlenecked
+## verbose defines how much information is printed to console during search
+model_grid = GridSearchCV(ElasticNet(), search, scoring="neg_mean_squared_error", cv=5,n_jobs=-1, verbose=50)
+model_grid.fit(train_X,train_y)
 
-# params = model_grid.best_params_
+params = model_grid.best_params_
 
-# print(f'Best grid search parameters:\n      {params}')
-# print(f'Best grid search loss:\n         {model_grid.best_score_}')
+print(f'Best grid search parameters:\n      {params}')
+print(f'Best grid search loss:\n         {model_grid.best_score_}')
 
 
 ###########################################################################
 ## Paste parameter results and scores here for posterity
-params = {'alpha': 0.001, 'l1_ratio': 0.4} 
-## Score: -0.0541876633514389
 
 model = ElasticNet(**params)
 model.fit(train_X,train_y)

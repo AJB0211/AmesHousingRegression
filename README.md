@@ -1,5 +1,22 @@
+# Regression Models on the Ames Housing Data Set
+Authors: Alex Bruening and Ryan Willett
+Date of final publication: June 3rd, 2019
+
+This repo is for the classic Kaggle competition concerning prediction of the sale prices of houses in Ames, Iowa. 
+Documents present in the repo are limited to exploratory Jupyter notebooks, the data work-up demonstrating pipeline usage, and an example script that demonstrates the workflow for using the aforementioned documents.
+
+A discussion of this repository can be found at this [blog post](https://nycdatascience.com/blog/student-works/studying-regression-model-efficacy-on-the-ames-housing-data-set/).
+
+Versions used reflect the latest available at the time of publication.
 
 
+For more information about this project feel free to contact ajb0211 "at" gmail "dot" com.
+
+### v3.1.2
+  * Published blog post
+  * Limited expanded .gitignore for legibility
+  * Uploaded model training
+  * Deprecated old models
 
 ### v3.1.1
  * Restructured folders

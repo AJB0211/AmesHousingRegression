@@ -159,10 +159,6 @@ def make_pipe():
 
         regressionPipeline = ColumnTransformer([
             ("setNone", nonePipeline, fillNone),
-            # ("labeled", make_pipeline(
-            #     SimpleImputer(strategy="constant",fill_value="None"),
-            #     LabelEncoder()), fillNoneLabelEnc),
-
             ("labeled", SimpleImputer(strategy="constant",fill_value="None"), fillNoneLabelEnc),
             ("setZero", zeroPipeline, fillZeroCat),
             ("transformed", scalePipeline, fillZeroCont),
